@@ -90,7 +90,7 @@ class AlertMessengerState extends State<AlertMessenger> with SingleTickerProvide
 
   Widget? alertWidget;
 
-  String textCurrentAlert = "";
+  AlertPriority? typeAlertPriority;
 
   final GroupAlertsByValue _groupAlertsByValue = GroupAlertsByValue();
   bool isShowingTheAlert = false;
@@ -103,12 +103,6 @@ class AlertMessengerState extends State<AlertMessenger> with SingleTickerProvide
       duration: const Duration(milliseconds: 300),
       vsync: this,
     );
-
-    controller.addStatusListener((AnimationStatus status) {
-      if (status == AnimationStatus.dismissed) {
-        _verifyOtherAlerts();
-      }
-    });
   }
 
   @override
@@ -125,49 +119,60 @@ class AlertMessengerState extends State<AlertMessenger> with SingleTickerProvide
     controller.dispose();
     super.dispose();
   }
-  // Você deve alterar esse comportamento de modo que um alerta de prioridade mais alta sobreponha
-  // (fique em cima) de um alerta de prioridade mais baixa. O contrário, no entanto, não pode ser verdade, ou seja, um alerta de informação não
-  // pode aparecer sobre um alerta de aviso. Nessa última situação,
-  // o alerta de aviso deverá ficar no topo e o alerta de informação só aparecerá quando o botão de esconder o alerta atual for acionado.
 
-
-      // faça uma gestão para abrir o novo primeiro se for error e dps warning
   void showAlert({required Alert alert}) {
-    if (isShowingTheAlert) {
-      _saveAlert(alert);
-    } else {
-      setState(() {
-        alertWidget = alert;
-        textCurrentAlert = alert.priority.name;
-      });
-      isShowingTheAlert = true;
-    }
-    controller.forward();
+    _verifyIfHasAlerts(nextAlert: alert);
   }
 
   void hideAlert() {
-    isShowingTheAlert = false;
-    setState(() {
-      textCurrentAlert = "";
+    _groupAlertsByValue.deleteNextAlert();
+    controller.reverse().whenComplete(() {
+      setState(() {
+        typeAlertPriority = null;
+      });
+      _verifyIfHasAlerts();
     });
-    controller.reverse();
   }
 
-  void _verifyOtherAlerts() {
-    Alert? alert;
-    alert = _groupAlertsByValue.nextAlert();
-    if (alert != null) {
-      showAlert(alert: alert);
+  void _verifyIfHasAlerts({Alert? nextAlert}) {
+    Alert? alert = _groupAlertsByValue.nextAlert;
+    _saveAlert(nextAlert);
+
+    if (alert == null && nextAlert != null) {
+      _setToShowAlertWithAnimation(alert: nextAlert);
+    }
+    if (alert != null && nextAlert == null) {
+      _setToShowAlertWithAnimation(alert: alert);
+    }
+    if (alert != null && nextAlert != null && nextAlert.priority.value == alert.priority.value) {
+      _setToShowAlertWithAnimation(alert: alert);
+    }
+
+    if (alert != null && nextAlert != null && nextAlert.priority.value > alert.priority.value) {
+      _setToShowAlertWithAnimation(alert: nextAlert);
     }
   }
 
-  void _saveAlert(Alert alert) {
-    if (alert.priority.value == 2) {
-      _groupAlertsByValue.listError.add(alert);
-    } else if (alert.priority.value == 1) {
-      _groupAlertsByValue.listWarning.add(alert);
-    } else {
-      _groupAlertsByValue.listInfo.add(alert);
+  void _setToShowAlertWithAnimation({required Alert alert}) {
+    controller.reverse().whenComplete(() {
+      setState(() {
+        alertWidget = alert;
+        typeAlertPriority = alert.priority;
+      });
+      controller.forward();
+    });
+  }
+
+  void _saveAlert(Alert? alert) {
+    if (alert != null) {
+      switch (alert.priority.value) {
+        case 2:
+          _groupAlertsByValue.listError.add(alert);
+        case 1:
+          _groupAlertsByValue.listWarning.add(alert);
+        case 0:
+          _groupAlertsByValue.listInfo.add(alert);
+      }
     }
   }
 
@@ -221,25 +226,32 @@ class GroupAlertsByValue {
 
   GroupAlertsByValue();
 
-  bool get listErrorIsEmpty => listError.isEmpty;
+  bool get listErrorIsEmpty => listError.isNotEmpty;
 
-  bool get listWarningIsEmpty => listWarning.isEmpty;
+  bool get listWarningIsEmpty => listWarning.isNotEmpty;
 
-  bool get listInfoIsEmpty => listInfo.isEmpty;
+  bool get listInfoIsEmpty => listInfo.isNotEmpty;
 
-  Alert? nextAlert() {
+  Alert? get nextAlert {
     Alert? alert;
 
-    if (!listErrorIsEmpty) {
+    if (listErrorIsEmpty) {
       alert = listError.first;
-      listError.remove(listError.first);
-    } else if (!listWarningIsEmpty) {
+    } else if (listWarningIsEmpty) {
       alert = listWarning.first;
-      listWarning.remove(listWarning.first);
-    } else if (!listInfoIsEmpty) {
+    } else if (listInfoIsEmpty) {
       alert = listInfo.first;
-      listInfo.remove(listInfo.first);
     }
     return alert;
+  }
+
+  void deleteNextAlert() {
+    if (listErrorIsEmpty) {
+      listError.remove(listError.first);
+    } else if (listWarningIsEmpty) {
+      listWarning.remove(listWarning.first);
+    } else if (listInfoIsEmpty) {
+      listInfo.remove(listInfo.first);
+    }
   }
 }

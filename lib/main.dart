@@ -7,6 +7,27 @@ void main() => runApp(const AlertPriorityApp());
 class AlertPriorityApp extends StatelessWidget {
   const AlertPriorityApp({super.key});
 
+  String get textErrorAlert => 'Oops, ocorreu um erro. Pedimos desculpas.';
+
+  String get textWarningAlert => 'Atenção! Você foi avisado.';
+
+  String get textInfoAlert => 'Este é um aplicativo escrito em Flutter.';
+
+  String setTextAlert(AlertPriority? alert) {
+    if (alert != null) {
+      switch (alert) {
+        case AlertPriority.error:
+          return textErrorAlert;
+        case AlertPriority.warning:
+          return textWarningAlert;
+        case AlertPriority.info:
+          return textErrorAlert;
+      }
+    } else {
+      return "Não há alertas para exibir";
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -17,7 +38,7 @@ class AlertPriorityApp extends StatelessWidget {
             elevatedButtonTheme: const ElevatedButtonThemeData(
                 style: ButtonStyle(minimumSize: MaterialStatePropertyAll(Size(110, 40))))),
         home: AlertMessenger(child: Builder(builder: (context) {
-          String textAlert = AlertMessenger.of(context).textCurrentAlert;
+          String textAlert = setTextAlert(AlertMessenger.of(context).typeAlertPriority);
           return Scaffold(
               backgroundColor: Colors.grey[200],
               appBar: AppBar(
@@ -28,9 +49,7 @@ class AlertPriorityApp extends StatelessWidget {
                   child: Column(children: [
                 Expanded(
                     flex: 3,
-                    child: Center(
-                        child: Text(textAlert,
-                            style: TextStyle(color: Colors.grey[500], fontSize: 16.0)))),
+                    child: Center(child: Text(textAlert, style: TextStyle(color: Colors.grey[500], fontSize: 16.0)))),
                 Expanded(
                     child: Align(
                         alignment: Alignment.bottomCenter,
@@ -42,11 +61,11 @@ class AlertPriorityApp extends StatelessWidget {
                                 ElevatedButton(
                                     onPressed: () {
                                       AlertMessenger.of(context).showAlert(
-                                          alert: const Alert(
+                                          alert: Alert(
                                               backgroundColor: Colors.red,
-                                              leading: Icon(Icons.error),
+                                              leading: const Icon(Icons.error),
                                               priority: AlertPriority.error,
-                                              child: Text('Oops, ocorreu um erro. Pedimos desculpas.')));
+                                              child: Text(textErrorAlert)));
                                     },
                                     style: const ButtonStyle(backgroundColor: MaterialStatePropertyAll(Colors.red)),
                                     child: const Row(
@@ -60,12 +79,12 @@ class AlertPriorityApp extends StatelessWidget {
                                 ElevatedButton(
                                     onPressed: () {
                                       AlertMessenger.of(context).showAlert(
-                                          alert: const Alert(
+                                          alert: Alert(
                                               backgroundColor: Colors.amber,
-                                              leading: Icon(Icons.warning),
+                                              leading: const Icon(Icons.warning),
                                               priority: AlertPriority.warning,
-                                              child: Text('Atenção! Você foi avisado.')));
-                                      },
+                                              child: Text(textWarningAlert)));
+                                    },
                                     style: const ButtonStyle(backgroundColor: MaterialStatePropertyAll(Colors.amber)),
                                     child: const Row(
                                         mainAxisSize: MainAxisSize.max,
@@ -78,11 +97,11 @@ class AlertPriorityApp extends StatelessWidget {
                                 ElevatedButton(
                                     onPressed: () {
                                       AlertMessenger.of(context).showAlert(
-                                          alert: const Alert(
+                                          alert: Alert(
                                               backgroundColor: Colors.green,
-                                              leading: Icon(Icons.info),
+                                              leading: const Icon(Icons.info),
                                               priority: AlertPriority.info,
-                                              child: Text('Este é um aplicativo escrito em Flutter.')));
+                                              child: Text(textInfoAlert)));
                                     },
                                     style:
                                         const ButtonStyle(backgroundColor: MaterialStatePropertyAll(Colors.lightGreen)),
