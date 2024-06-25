@@ -70,7 +70,7 @@ class AlertMessenger extends StatefulWidget {
 
   static AlertMessengerState of(BuildContext context) {
     try {
-      final scope = _AlertMessengerScope.of(context);
+      _AlertMessengerScope scope = _AlertMessengerScope.of(context);
       return scope.state;
     } catch (error) {
       throw FlutterError.fromParts(
@@ -88,21 +88,15 @@ class AlertMessengerState extends State<AlertMessenger> with SingleTickerProvide
   late final AnimationController controller;
   late final Animation<double> animation;
 
-  Widget? alertWidget;
-
-  AlertPriority? typeAlertPriority;
-
   final GroupAlertsByValue _groupAlertsByValue = GroupAlertsByValue();
-  bool isShowingTheAlert = false;
+
+  Widget? alertWidget;
+  AlertPriority? typeAlertPriority;
 
   @override
   void initState() {
     super.initState();
-
-    controller = AnimationController(
-      duration: const Duration(milliseconds: 300),
-      vsync: this,
-    );
+    controller = AnimationController(duration: const Duration(milliseconds: 300), vsync: this);
   }
 
   @override
@@ -121,35 +115,29 @@ class AlertMessengerState extends State<AlertMessenger> with SingleTickerProvide
   }
 
   void showAlert({required Alert alert}) {
-    _verifyIfHasAlerts(nextAlert: alert);
+    _verifyIfHasAlerts(newAlert: alert);
   }
 
   void hideAlert() {
-    _groupAlertsByValue.deleteNextAlert();
+    _groupAlertsByValue.deleteTheMostImportantAlert();
     controller.reverse().whenComplete(() {
-      setState(() {
-        typeAlertPriority = null;
-      });
+      setState(() => typeAlertPriority = null);
       _verifyIfHasAlerts();
     });
   }
 
-  void _verifyIfHasAlerts({Alert? nextAlert}) {
+  void _verifyIfHasAlerts({Alert? newAlert}) {
     Alert? alert = _groupAlertsByValue.nextAlert;
-    _saveAlert(nextAlert);
+    _saveAlert(newAlert);
 
-    if (alert == null && nextAlert != null) {
-      _setToShowAlertWithAnimation(alert: nextAlert);
-    }
-    if (alert != null && nextAlert == null) {
+    if (alert == null && newAlert != null) {
+      _setToShowAlertWithAnimation(alert: newAlert);
+    } else if (alert != null && newAlert == null) {
       _setToShowAlertWithAnimation(alert: alert);
-    }
-    if (alert != null && nextAlert != null && nextAlert.priority.value == alert.priority.value) {
+    } else if (alert != null && newAlert != null && newAlert.priority.value == alert.priority.value) {
       _setToShowAlertWithAnimation(alert: alert);
-    }
-
-    if (alert != null && nextAlert != null && nextAlert.priority.value > alert.priority.value) {
-      _setToShowAlertWithAnimation(alert: nextAlert);
+    } else if (alert != null && newAlert != null && newAlert.priority.value > alert.priority.value) {
+      _setToShowAlertWithAnimation(alert: newAlert);
     }
   }
 
@@ -226,31 +214,31 @@ class GroupAlertsByValue {
 
   GroupAlertsByValue();
 
-  bool get listErrorIsEmpty => listError.isNotEmpty;
+  bool get listErrorIsNotEmpty => listError.isNotEmpty;
 
-  bool get listWarningIsEmpty => listWarning.isNotEmpty;
+  bool get listWarningIsNotEmpty => listWarning.isNotEmpty;
 
-  bool get listInfoIsEmpty => listInfo.isNotEmpty;
+  bool get listInfoIsNotEmpty => listInfo.isNotEmpty;
 
   Alert? get nextAlert {
     Alert? alert;
 
-    if (listErrorIsEmpty) {
+    if (listErrorIsNotEmpty) {
       alert = listError.first;
-    } else if (listWarningIsEmpty) {
+    } else if (listWarningIsNotEmpty) {
       alert = listWarning.first;
-    } else if (listInfoIsEmpty) {
+    } else if (listInfoIsNotEmpty) {
       alert = listInfo.first;
     }
     return alert;
   }
 
-  void deleteNextAlert() {
-    if (listErrorIsEmpty) {
+  void deleteTheMostImportantAlert() {
+    if (listErrorIsNotEmpty) {
       listError.remove(listError.first);
-    } else if (listWarningIsEmpty) {
+    } else if (listWarningIsNotEmpty) {
       listWarning.remove(listWarning.first);
-    } else if (listInfoIsEmpty) {
+    } else if (listInfoIsNotEmpty) {
       listInfo.remove(listInfo.first);
     }
   }
