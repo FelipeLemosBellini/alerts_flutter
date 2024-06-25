@@ -36,7 +36,7 @@ class AlertPriorityApp extends StatelessWidget {
             primarySwatch: Colors.blue,
             iconTheme: const IconThemeData(size: 16.0, color: Colors.white),
             elevatedButtonTheme: const ElevatedButtonThemeData(
-                style: ButtonStyle(minimumSize: MaterialStatePropertyAll(Size(110, 40))))),
+                style: ButtonStyle(minimumSize: WidgetStatePropertyAll(Size(110, 40))))),
         home: AlertMessenger(child: Builder(builder: (context) {
           String textAlert = setTextAlert(AlertMessenger.of(context).typeAlertPriority);
           return Scaffold(
