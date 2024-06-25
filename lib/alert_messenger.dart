@@ -89,8 +89,10 @@ class AlertMessengerState extends State<AlertMessenger> with SingleTickerProvide
   late final Animation<double> animation;
 
   Widget? alertWidget;
-  GroupAlertsByValue _groupAlertsByValue = GroupAlertsByValue();
 
+  String textCurrentAlert = "";
+
+  final GroupAlertsByValue _groupAlertsByValue = GroupAlertsByValue();
   bool isShowingTheAlert = false;
 
   @override
@@ -104,9 +106,7 @@ class AlertMessengerState extends State<AlertMessenger> with SingleTickerProvide
 
     controller.addStatusListener((AnimationStatus status) {
       if (status == AnimationStatus.dismissed) {
-        setState(() {
-          _verifyOtherAlerts();
-        });
+        _verifyOtherAlerts();
       }
     });
   }
@@ -114,7 +114,7 @@ class AlertMessengerState extends State<AlertMessenger> with SingleTickerProvide
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    final alertHeight = MediaQuery.of(context).padding.top + kAlertHeight;
+    final alertHeight = MediaQuery.paddingOf(context).top + kAlertHeight;
     animation = Tween<double>(begin: -alertHeight, end: 0.0).animate(
       CurvedAnimation(parent: controller, curve: Curves.easeInOut),
     );
@@ -125,12 +125,21 @@ class AlertMessengerState extends State<AlertMessenger> with SingleTickerProvide
     controller.dispose();
     super.dispose();
   }
+  // Você deve alterar esse comportamento de modo que um alerta de prioridade mais alta sobreponha
+  // (fique em cima) de um alerta de prioridade mais baixa. O contrário, no entanto, não pode ser verdade, ou seja, um alerta de informação não
+  // pode aparecer sobre um alerta de aviso. Nessa última situação,
+  // o alerta de aviso deverá ficar no topo e o alerta de informação só aparecerá quando o botão de esconder o alerta atual for acionado.
 
+
+      // faça uma gestão para abrir o novo primeiro se for error e dps warning
   void showAlert({required Alert alert}) {
     if (isShowingTheAlert) {
       _saveAlert(alert);
     } else {
-      setState(() => alertWidget = alert);
+      setState(() {
+        alertWidget = alert;
+        textCurrentAlert = alert.priority.name;
+      });
       isShowingTheAlert = true;
     }
     controller.forward();
@@ -138,7 +147,9 @@ class AlertMessengerState extends State<AlertMessenger> with SingleTickerProvide
 
   void hideAlert() {
     isShowingTheAlert = false;
-
+    setState(() {
+      textCurrentAlert = "";
+    });
     controller.reverse();
   }
 
@@ -190,7 +201,7 @@ class _AlertMessengerScope extends InheritedWidget {
   final AlertMessengerState state;
 
   @override
-  bool updateShouldNotify(_AlertMessengerScope oldWidget) => state != oldWidget.state;
+  bool updateShouldNotify(_AlertMessengerScope oldWidget) => true;
 
   static _AlertMessengerScope? maybeOf(BuildContext context) {
     return context.dependOnInheritedWidgetOfExactType<_AlertMessengerScope>();

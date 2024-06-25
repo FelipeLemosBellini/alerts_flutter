@@ -17,6 +17,7 @@ class AlertPriorityApp extends StatelessWidget {
             elevatedButtonTheme: const ElevatedButtonThemeData(
                 style: ButtonStyle(minimumSize: MaterialStatePropertyAll(Size(110, 40))))),
         home: AlertMessenger(child: Builder(builder: (context) {
+          String textAlert = AlertMessenger.of(context).textCurrentAlert;
           return Scaffold(
               backgroundColor: Colors.grey[200],
               appBar: AppBar(
@@ -28,7 +29,7 @@ class AlertPriorityApp extends StatelessWidget {
                 Expanded(
                     flex: 3,
                     child: Center(
-                        child: Text('<Adicione o texto do alerta de prioridade aqui>',
+                        child: Text(textAlert,
                             style: TextStyle(color: Colors.grey[500], fontSize: 16.0)))),
                 Expanded(
                     child: Align(
@@ -64,7 +65,7 @@ class AlertPriorityApp extends StatelessWidget {
                                               leading: Icon(Icons.warning),
                                               priority: AlertPriority.warning,
                                               child: Text('Atenção! Você foi avisado.')));
-                                    },
+                                      },
                                     style: const ButtonStyle(backgroundColor: MaterialStatePropertyAll(Colors.amber)),
                                     child: const Row(
                                         mainAxisSize: MainAxisSize.max,
