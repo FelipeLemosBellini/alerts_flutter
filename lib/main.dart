@@ -21,7 +21,7 @@ class AlertPriorityApp extends StatelessWidget {
         case AlertPriority.warning:
           return textWarningAlert;
         case AlertPriority.info:
-          return textErrorAlert;
+          return textInfoAlert;
       }
     } else {
       return "Não há alertas para exibir";
